@@ -1,0 +1,92 @@
+{
+ "ct_title": "Hãy kết nối với chúng tôi",
+ "ct_title_en": "Let's Get in Touch",
+ "ct_intro": "Bạn đang cần chọn bơm chân không vòng nước, bơm ly tâm hay máy nén phù hợp cho nhà máy? Đội ngũ kỹ thuật của chúng tôi luôn sẵn sàng lắng nghe, tính toán và đề xuất giải pháp tối ưu theo đúng điều kiện làm việc của bạn. Hãy để lại thông tin, chúng tôi sẽ liên hệ lại sớm nhất.",
+ "ct_intro_en": "Looking for the right liquid ring vacuum pump, centrifugal pump or compressor for your plant? Our technical team is ready to listen, calculate and recommend the best solution for your operating conditions. Leave your details and we will get back to you as soon as possible.",
+ "ct_points": [
+  {
+   "i": "⚡",
+   "t": "Phản hồi nhanh",
+   "t_en": "Fast Response",
+   "d": "Tiếp nhận yêu cầu và phản hồi trong thời gian sớm nhất, thường trong 24 giờ làm việc.",
+   "d_en": "We receive your request and reply as soon as possible, usually within 24 business hours."
+  },
+  {
+   "i": "🛠️",
+   "t": "Tư vấn kỹ thuật chuyên sâu",
+   "t_en": "In-depth Technical Advice",
+   "d": "Tính chọn thiết bị theo lưu lượng, áp suất, môi chất và điều kiện vận hành thực tế.",
+   "d_en": "Equipment sizing based on flow, pressure, medium and real operating conditions."
+  },
+  {
+   "i": "📦",
+   "t": "Phụ tùng & dịch vụ",
+   "t_en": "Spare Parts & Service",
+   "d": "Hỗ trợ phụ tùng thay thế, đại tu và bảo trì để thiết bị vận hành ổn định lâu dài.",
+   "d_en": "Spare parts, overhaul and maintenance support for long, stable operation."
+  },
+  {
+   "i": "🤝",
+   "t": "Đồng hành lâu dài",
+   "t_en": "Long-term Partnership",
+   "d": "Từ lựa chọn thiết bị, lắp đặt, chạy thử đến hỗ trợ trong suốt quá trình sử dụng.",
+   "d_en": "From equipment selection, installation and commissioning to support throughout its service life."
+  }
+ ],
+ "ct_steps": [
+  {
+   "t": "Gửi yêu cầu",
+   "t_en": "Send Your Request",
+   "d": "Cho chúng tôi biết loại thiết bị, thông số và điều kiện làm việc.",
+   "d_en": "Tell us the equipment type, parameters and operating conditions."
+  },
+  {
+   "t": "Tư vấn & tính chọn",
+   "t_en": "Consultation & Sizing",
+   "d": "Kỹ sư đề xuất model phù hợp và giải đáp mọi thắc mắc.",
+   "d_en": "Our engineers recommend the right model and answer your questions."
+  },
+  {
+   "t": "Báo giá",
+   "t_en": "Quotation",
+   "d": "Nhận báo giá chi tiết cùng thời gian giao hàng và điều kiện thương mại.",
+   "d_en": "Receive a detailed quotation with delivery time and commercial terms."
+  },
+  {
+   "t": "Giao hàng & hỗ trợ",
+   "t_en": "Delivery & Support",
+   "d": "Giao hàng, hướng dẫn lắp đặt, vận hành và hỗ trợ sau bán hàng.",
+   "d_en": "Delivery, installation guidance, operation training and after-sales support."
+  }
+ ],
+ "ct_faq": [
+  {
+   "q": "Tôi cần cung cấp thông tin gì để được báo giá?",
+   "q_en": "What information do I need to provide for a quotation?",
+   "a": "Lưu lượng, áp suất (hoặc độ chân không), loại môi chất, nhiệt độ, điện áp nguồn và ứng dụng. Nếu có sơ đồ hoặc thông tin bơm đang dùng thì càng tốt.",
+   "a_en": "Flow rate, pressure (or vacuum level), medium, temperature, power supply and application. A diagram or details of your current pump are a plus."
+  },
+  {
+   "q": "Bao lâu tôi nhận được phản hồi?",
+   "q_en": "How soon will I get a reply?",
+   "a": "Chúng tôi cố gắng phản hồi trong vòng 24 giờ làm việc kể từ khi nhận được yêu cầu.",
+   "a_en": "We aim to reply within 24 business hours of receiving your request."
+  },
+  {
+   "q": "Có hỗ trợ thay thế bơm của hãng khác không?",
+   "q_en": "Can you help replace a pump from another brand?",
+   "a": "Có. Hãy gửi model và thông số bơm hiện tại; chúng tôi đối chiếu đường đặc tính và kích thước lắp đặt để đề xuất phương án phù hợp.",
+   "a_en": "Yes. Send us the model and specifications of your current pump and we will compare performance curves and installation dimensions to propose a suitable option."
+  },
+  {
+   "q": "Có cung cấp phụ tùng và dịch vụ bảo trì không?",
+   "q_en": "Do you supply spare parts and maintenance services?",
+   "a": "Có thể hỗ trợ phụ tùng thay thế và tư vấn bảo trì. Vui lòng liên hệ để biết chi tiết theo từng model.",
+   "a_en": "We can support spare parts and maintenance advice. Please contact us for details on each model."
+  }
+ ],
+ "ct_cta_t": "Cần hỗ trợ gấp?",
+ "ct_cta_t_en": "Need urgent support?",
+ "ct_cta_d": "Gọi ngay cho chúng tôi hoặc gửi email, đội ngũ kỹ thuật sẽ phản hồi trong thời gian sớm nhất.",
+ "ct_cta_d_en": "Call us or send an email and our technical team will respond as soon as possible."
+}
