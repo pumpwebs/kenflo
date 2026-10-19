@@ -139,17 +139,32 @@ async function contactTab(){view("contact","contact");const s=await fetch("/api/
  <h4>1. Hiển thị ở đầu trang</h4>${f("c_phone","Điện thoại / hotline",s.phone)}${f("c_email","Email",s.email)}<label>Giờ làm việc (Tiếng Việt | English)</label><div class="two"><input id="c_hours" value="${esc(s.hours)}"><input id="c_hours_en" value="${esc(s.hours_en)}"></div>
  <h4>2. Các dòng ở trang Liên hệ</h4><div id="crows"></div><p><button class="g" onclick="addC()">＋ Thêm dòng</button></p>
  ${f("c_map","Link bản đồ nhúng (tùy chọn)",s.map,"Google Maps → Chia sẻ → Nhúng bản đồ → chép link trong src=…")}
- <p><button id="cs" onclick="saveC()">💾 Lưu thông tin liên hệ</button></p></div>`;drawC()}
+ <h4 style="margin-top:26px">3. Nội dung giới thiệu trang Liên hệ</h4><div class="note">Các nội dung bên dưới đã có sẵn bản mẫu: bạn sửa lại cho đúng thực tế, thêm hoặc xóa tùy ý. Chỉ cần điền một ngôn ngữ, bản kia tự dịch khi lưu. <button class="g" style="padding:4px 10px" onclick="if(confirm('Khôi phục toàn bộ nội dung mẫu?'))drawCt({})">↺ Khôi phục nội dung mẫu</button></div><div id="ctx"></div><p><button id="cs" onclick="saveC()">💾 Lưu thông tin liên hệ</button></p></div>`;drawC();drawCt(s)}
 function drawC(){$("#crows").innerHTML=CR.map((r,i)=>`<div class="row" style="align-items:flex-start"><div><input data-i="${i}" data-k="l" value="${esc(r.l)}" placeholder="Nhãn (VD: Địa chỉ)"></div><div><input data-i="${i}" data-k="l_en" value="${esc(r.l_en)}" placeholder="Label (EN)"></div><div style="flex:2"><input data-i="${i}" data-k="v" value="${esc(r.v)}" placeholder="Nội dung"></div><button class="r" onclick="delC(${i})">Xóa</button></div>`).join("")}
 function grabC(){document.querySelectorAll("#crows input").forEach(e=>CR[e.dataset.i][e.dataset.k]=e.value)}
 function addC(){grabC();CR.push({l:"",l_en:"",v:""});drawC()}
 function delC(i){grabC();CR.splice(i,1);drawC()}
 async function saveC(){grabC();const o=await fetch("/api/settings").then(r=>r.json()),g=i=>$("#"+i).value;
- Object.assign(o,{phone:g("c_phone"),email:g("c_email"),hours:g("c_hours"),hours_en:g("c_hours_en"),map:g("c_map")});
+ Object.assign(o,{phone:g("c_phone"),email:g("c_email"),hours:g("c_hours"),hours_en:g("c_hours_en"),map:g("c_map")});grabCt(o);
  const bt=$("#cs");bt.disabled=true;bt.textContent="Đang lưu…";
- try{CR=CR.filter(r=>r.l||r.l_en||r.v);for(const r of CR)await autoTr(r,[["l",0]],"fill",true);await autoTr(o,[["hours",0]],"fill",true);o.contacts=CR;
+ try{CR=CR.filter(r=>r.l||r.l_en||r.v);for(const r of CR)await autoTr(r,[["l",0]],"fill",true);await autoTr(o,[["hours",0]],"fill",true);await trCt(o);o.contacts=CR;
   await api("/api/settings",{method:"POST",body:JSON.stringify(o)});alert("Đã lưu!");contactTab()}catch(e){alert("Lỗi: "+e.message)}
  bt.disabled=false;bt.textContent="💾 Lưu thông tin liên hệ"}
 
+
+/* ---- nội dung trang Liên hệ ---- */
+const CTL={ct_points:[["i","Biểu tượng (emoji)"],["t","Tiêu đề (VI)"],["t_en","Title (EN)"],["d","Mô tả (VI)",2],["d_en","Description (EN)",2]],ct_steps:[["t","Bước (VI)"],["t_en","Step (EN)"],["d","Mô tả (VI)",2],["d_en","Description (EN)",2]],ct_faq:[["q","Câu hỏi (VI)"],["q_en","Question (EN)"],["a","Trả lời (VI)",2],["a_en","Answer (EN)",2]]};
+const CTT={ct_points:"Các ô nổi bật (nên để 4 ô cho đẹp)",ct_steps:"Quy trình làm việc",ct_faq:"Câu hỏi thường gặp"};
+let CTS={};
+async function drawCt(s){const D=await fetch("/ct-default.json").then(r=>r.json()).catch(()=>({})),v=k=>s[k]!=null&&s[k]!==""?s[k]:(D[k]||""),f2=(id,l,a,b,t)=>`<label>${l}</label><div class="two">${inp(id,v(a),t)}${inp(id+"_en",v(b),t)}</div>`;
+ CTS={};Object.keys(CTL).forEach(k=>CTS[k]=JSON.parse(JSON.stringify(Array.isArray(s[k])?s[k]:(D[k]||[]))));
+ $("#ctx").innerHTML=f2("x_title","Tiêu đề đầu trang (VI | EN)","ct_title","ct_title_en")+f2("x_intro","Đoạn giới thiệu (VI | EN)","ct_intro","ct_intro_en","t")+Object.keys(CTL).map(k=>`<h4 style="margin-top:20px">${CTT[k]}</h4><div id="ls_${k}"></div><p><button class="g" onclick="addL('${k}')">＋ Thêm</button></p>`).join("")+f2("x_ctat","Tiêu đề khung kêu gọi cuối trang (VI | EN)","ct_cta_t","ct_cta_t_en")+f2("x_ctad","Mô tả khung kêu gọi (VI | EN)","ct_cta_d","ct_cta_d_en","t");
+ Object.keys(CTL).forEach(drawL)}
+function drawL(k){$("#ls_"+k).innerHTML=CTS[k].map((r,i)=>`<div class="box" style="background:#f8fafc;padding:14px;margin-bottom:10px"><div style="text-align:right"><button class="r" style="padding:4px 10px" onclick="delL('${k}',${i})">Xóa</button></div><div class="two">${CTL[k].map(([f,l,t])=>`<div><label>${l}</label>${t==2?`<textarea data-l="${k}" data-i="${i}" data-f="${f}" rows="3">${esc(r[f])}</textarea>`:`<input data-l="${k}" data-i="${i}" data-f="${f}" value="${esc(r[f])}">`}</div>`).join("")}</div></div>`).join("")}
+function grabL(){document.querySelectorAll("[data-l]").forEach(e=>{CTS[e.dataset.l][e.dataset.i][e.dataset.f]=e.value})}
+function addL(k){grabL();CTS[k].push({});drawL(k)}
+function delL(k,i){grabL();CTS[k].splice(i,1);drawL(k)}
+function grabCt(o){grabL();const g=i=>$("#"+i).value;Object.assign(o,{ct_title:g("x_title"),ct_title_en:g("x_title_en"),ct_intro:g("x_intro"),ct_intro_en:g("x_intro_en"),ct_cta_t:g("x_ctat"),ct_cta_t_en:g("x_ctat_en"),ct_cta_d:g("x_ctad"),ct_cta_d_en:g("x_ctad_en")});Object.keys(CTL).forEach(k=>o[k]=CTS[k].filter(r=>Object.values(r).some(Boolean)))}
+async function trCt(o){for(const k of ["ct_title","ct_intro","ct_cta_t","ct_cta_d"])await autoTr(o,[[k,0]],"fill",true);for(const k of Object.keys(CTL)){const pr=CTL[k].filter(f=>!f[0].endsWith("_en")&&f[0]!="i").map(f=>[f[0],0]);for(const r of o[k])await autoTr(r,pr,"fill",true)}}
 if(pw)api("/api/login",{method:"POST"}).then(start).catch(()=>{});
 </script></body></html>
