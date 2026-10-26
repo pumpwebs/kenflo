@@ -25,6 +25,13 @@ export async function onRequest({request,env,params}){
    if(url.searchParams.get("img")){const {results}=await db.prepare("SELECT id,data FROM images WHERE id>?1 ORDER BY id LIMIT 6").bind(parseInt(url.searchParams.get("after"))||0).all();return J(results)}
    const po=await db.prepare("SELECT * FROM posts ORDER BY id").all(),st=await db.prepare("SELECT k,v FROM settings").all(),ms=await db.prepare("SELECT * FROM messages ORDER BY id").all();
    return J({posts:po.results,settings:st.results,messages:ms.results})}
+  if(p==="restore"&&m==="POST"){if(!auth)return need();
+   const b=await request.json(),T={posts:["id","slug","type","title","title_en","excerpt","excerpt_en","body","body_en","cover","cat","cat_en","published","created","sort"],images:["id","data"],settings:["k","v"],messages:["id","name","phone","email","country","msg","created"]},cols=T[b.table];
+   if(!cols)return J({error:"Bảng không hợp lệ"},400);
+   if(b.clear)await db.prepare("DELETE FROM "+b.table).run();
+   const st=db.prepare((b.mode==="replace"?"INSERT OR REPLACE":"INSERT OR IGNORE")+" INTO "+b.table+"("+cols.join(",")+") VALUES("+cols.map((_,i)=>"?"+(i+1)).join(",")+")"),rows=Array.isArray(b.rows)?b.rows:[];
+   if(rows.length)await db.batch(rows.map(r=>st.bind(...cols.map(c=>r[c]!==undefined&&r[c]!==null?r[c]:(c==="id"?null:"")))));
+   return J({ok:rows.length})}
   if(p==="translate"){if(!auth)return need();const b=await request.json();
    return J({texts:await Promise.all(b.texts.slice(0,20).map(t=>tx(env,t,b.from,b.to)))})}
   if(p==="contact"&&m==="POST"){const b=await request.json(),c=k=>String(b[k]||"").slice(0,2000);
