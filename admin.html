@@ -23,7 +23,7 @@ input,textarea,select{width:100%;padding:10px;border:1px solid #ccc;border-radiu
 <label>Dịch tự động</label><select id="f_tr"><option value="fill">Tự điền phần còn trống (khuyên dùng)</option><option value="vi2en">Dịch lại từ Tiếng Việt → English (ghi đè)</option><option value="en2vi">Dịch lại từ English → Tiếng Việt (ghi đè)</option><option value="none">Không dịch</option></select>
 <button id="sv" onclick="save()">💾 Lưu</button> <button class="g" onclick="lst(ty)">Hủy</button></div></div>
 <div id="v_set" class="hide"><div class="box"><h3>Cài đặt website</h3><div class="note">Chỉ cần điền một ngôn ngữ, ngôn ngữ còn lại được tự dịch khi lưu.</div><div id="sf"></div><button id="ss" onclick="saveSet()">💾 Lưu cài đặt</button></div></div>
-<div id="v_msg" class="hide"></div><div id="v_contact" class="hide"></div><div id="v_seed" class="hide"></div><div id="v_bulk" class="hide"></div>
+<div id="v_msg" class="hide"></div><div id="v_contact" class="hide"></div><div id="v_seed" class="hide"></div><div id="v_bulk" class="hide"></div><div id="v_restore" class="hide"></div>
 </main></div>
 <script>
 let pw=sessionStorage.pw||"",cur={},ty="product",cl="vi",rng=null,$=s=>document.querySelector(s);
@@ -34,8 +34,8 @@ async function api(u,o={}){const r=await fetch(u,{...o,headers:H()});const d=awa
 const esc=s=>String(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 async function login(){pw=$("#pw").value;try{await api("/api/login",{method:"POST"});sessionStorage.pw=pw;start()}catch(e){alert("Sai mật khẩu hoặc chưa cài ADMIN_PASSWORD.")}}
 function start(){$("#login").classList.add("hide");$("#app").classList.remove("hide");
- $("#hd").innerHTML="<b>⚙ Quản trị</b>"+Object.entries(TY).map(([k,v])=>`<button data-k="${k}" onclick="lst('${k}')">${v}</button>`).join("")+`<button data-k="contact" onclick="contactTab()">Liên hệ</button><button data-k="msg" onclick="msgs()">Tin nhắn</button><button class="g" data-k="seed" onclick="seedTab()">📥 Dữ liệu mẫu</button><button data-k="bulk" onclick="bulkTab()">📦 Nhập hàng loạt</button><button data-k="set" onclick="sets()">Cài đặt web</button><button class="g" id="bk" onclick="backup()">💾 Tải bản sao lưu</button><span style="flex:1"></span><a href="/" target="_blank" style="color:#fff">Xem web ↗</a> <button class="g" onclick="sessionStorage.clear();location.reload()">Thoát</button>`;lst("product")}
-function view(n,k){["list","edit","set","msg","contact","seed","bulk"].forEach(x=>$("#v_"+x).classList.toggle("hide",x!=n));document.querySelectorAll("#hd button[data-k]").forEach(b=>b.classList.toggle("on",b.dataset.k==k))}
+ $("#hd").innerHTML="<b>⚙ Quản trị</b>"+Object.entries(TY).map(([k,v])=>`<button data-k="${k}" onclick="lst('${k}')">${v}</button>`).join("")+`<button data-k="contact" onclick="contactTab()">Liên hệ</button><button data-k="msg" onclick="msgs()">Tin nhắn</button><button class="g" data-k="seed" onclick="seedTab()">📥 Dữ liệu mẫu</button><button data-k="bulk" onclick="bulkTab()">📦 Nhập hàng loạt</button><button data-k="set" onclick="sets()">Cài đặt web</button><button class="g" id="bk" onclick="backup()">💾 Tải bản sao lưu</button><button class="g" data-k="restore" onclick="restoreTab()">♻ Khôi phục</button><span style="flex:1"></span><a href="/" target="_blank" style="color:#fff">Xem web ↗</a> <button class="g" onclick="sessionStorage.clear();location.reload()">Thoát</button>`;lst("product")}
+function view(n,k){["list","edit","set","msg","contact","seed","bulk","restore"].forEach(x=>$("#v_"+x).classList.toggle("hide",x!=n));document.querySelectorAll("#hd button[data-k]").forEach(b=>b.classList.toggle("on",b.dataset.k==k))}
 async function lst(t){ty=t;view("list",t);const p=await api("/api/items?type="+t);let h;
  const row=x=>`<div class="row">${x.cover?`<img src="${x.cover}">`:""}<div><b>${esc(x.title||x.title_en)}</b><br><small>${t=="product"?"":esc(x.cat)} ${["news","application"].includes(t)?"· "+x.created:""}</small> ${x.published?"":'<span class="tag">Nháp</span>'}</div><button onclick="edit('${x.slug}')">Sửa</button><button class="r" onclick="del(${x.id})">Xóa</button></div>`;
  if(t=="product"){const gs=await api("/api/items?type=pgroup"),used=new Set();
@@ -211,6 +211,31 @@ async function runBulk(){const L=$("#bk_log"),log=m=>{L.textContent+=m+"\n";L.sc
   log("=== Xong: "+ok+" bài thành công, "+bad+" lỗi. Mở tab tương ứng hoặc xem trang web để kiểm tra. ===")
  }catch(er){log("LỖI: "+er.message)}
  $("#bk_go").disabled=false}
+/* ---- khôi phục từ file sao lưu ---- */
+function restoreTab(){view("restore","restore");$("#v_restore").innerHTML=`<div class="box"><h3>♻ Khôi phục từ file sao lưu</h3><div class="note">Chọn file <b>kenflo-sao-luu-….json</b> đã tải bằng nút “💾 Tải bản sao lưu”. Có 2 cách:<br>• <b>Bổ sung (an toàn):</b> chỉ nạp những mục hiện <u>chưa có</u> (bài bị xóa nhầm, ảnh thiếu…). Không ghi đè gì đang có.<br>• <b>Đưa về đúng như file (nguy hiểm):</b> xóa toàn bộ dữ liệu hiện tại rồi nạp lại y như lúc sao lưu. Bài, ảnh, cài đặt làm <u>sau</u> lúc sao lưu sẽ mất. Hệ thống sẽ tự tải một bản sao lưu mới của dữ liệu hiện tại trước khi làm.<br>Không đóng trang khi đang chạy.</div>
+<label>File sao lưu (.json)</label><input type="file" id="rs_file" accept=".json,application/json">
+<label>Cách khôi phục</label><select id="rs_mode"><option value="merge">Bổ sung (an toàn, khuyên dùng)</option><option value="replace">Đưa về đúng như file (xóa dữ liệu hiện tại)</option></select>
+<p><button id="rs_go" onclick="runRestore()">▶ Bắt đầu khôi phục</button></p><pre id="rs_log" style="background:#111;color:#9f9;padding:12px;max-height:380px;overflow:auto;font-size:12px;white-space:pre-wrap"></pre></div>`}
+async function runRestore(){const L=$("#rs_log"),log=m=>{L.textContent+=m+"\n";L.scrollTop=1e9};L.textContent="";
+ const f=$("#rs_file").files[0];if(!f)return alert("Hãy chọn file sao lưu (.json).");
+ let d;try{d=JSON.parse(await f.text())}catch(e){return alert("File không đọc được (không phải file sao lưu hợp lệ).")}
+ if(!d||!Array.isArray(d.posts)||!Array.isArray(d.images)||!Array.isArray(d.settings))return alert("Đây không phải file sao lưu của website này.");
+ const mode=$("#rs_mode").value,rep=mode=="replace";
+ if(rep){if(!confirm("CẢNH BÁO: sẽ XÓA toàn bộ dữ liệu hiện tại và đưa về đúng như file sao lưu ("+(d.exported||"").slice(0,10)+").\nBài và ảnh tạo sau thời điểm đó sẽ mất.\n\nBấm OK để tiếp tục.")||!confirm("Xác nhận lần cuối: bạn chắc chắn muốn đưa website về bản sao lưu này?"))return;
+  log("Đang tải bản sao lưu dữ liệu hiện tại (để phòng khi cần quay lại)…");await backup();log("Đã tải xong bản sao lưu hiện tại.")}
+ $("#rs_go").disabled=true;
+ try{
+  const send=async(table,rows,clear)=>api("/api/restore",{method:"POST",body:JSON.stringify({table,rows,mode,clear})});
+  const run=async(table,rows,size,label)=>{log(label+": "+rows.length+" mục…");let n=0;
+   if(!rows.length&&rep)await send(table,[],true);
+   for(let i=0;i<rows.length;i+=size){await send(table,rows.slice(i,i+size),rep&&i==0);n+=Math.min(size,rows.length-i);log("  …"+n+"/"+rows.length)}};
+  await run("images",d.images,6,"Ảnh");
+  await run("posts",d.posts,10,"Bài viết");
+  await run("settings",d.settings,10,"Cài đặt");
+  await run("messages",d.messages||[],50,"Tin nhắn");
+  log("=== Xong! Bấm Ctrl+F5 rồi mở trang web để kiểm tra. ===")
+ }catch(e){log("LỖI: "+e.message)}
+ $("#rs_go").disabled=false}
 /* ---- tab Liên hệ ---- */
 let CR=[];
 async function contactTab(){view("contact","contact");const s=await fetch("/api/settings").then(r=>r.json());
