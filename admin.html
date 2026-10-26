@@ -23,7 +23,7 @@ input,textarea,select{width:100%;padding:10px;border:1px solid #ccc;border-radiu
 <label>Dịch tự động</label><select id="f_tr"><option value="fill">Tự điền phần còn trống (khuyên dùng)</option><option value="vi2en">Dịch lại từ Tiếng Việt → English (ghi đè)</option><option value="en2vi">Dịch lại từ English → Tiếng Việt (ghi đè)</option><option value="none">Không dịch</option></select>
 <button id="sv" onclick="save()">💾 Lưu</button> <button class="g" onclick="lst(ty)">Hủy</button></div></div>
 <div id="v_set" class="hide"><div class="box"><h3>Cài đặt website</h3><div class="note">Chỉ cần điền một ngôn ngữ, ngôn ngữ còn lại được tự dịch khi lưu.</div><div id="sf"></div><button id="ss" onclick="saveSet()">💾 Lưu cài đặt</button></div></div>
-<div id="v_msg" class="hide"></div><div id="v_contact" class="hide"></div><div id="v_seed" class="hide"></div>
+<div id="v_msg" class="hide"></div><div id="v_contact" class="hide"></div><div id="v_seed" class="hide"></div><div id="v_bulk" class="hide"></div>
 </main></div>
 <script>
 let pw=sessionStorage.pw||"",cur={},ty="product",cl="vi",rng=null,$=s=>document.querySelector(s);
@@ -34,8 +34,8 @@ async function api(u,o={}){const r=await fetch(u,{...o,headers:H()});const d=awa
 const esc=s=>String(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 async function login(){pw=$("#pw").value;try{await api("/api/login",{method:"POST"});sessionStorage.pw=pw;start()}catch(e){alert("Sai mật khẩu hoặc chưa cài ADMIN_PASSWORD.")}}
 function start(){$("#login").classList.add("hide");$("#app").classList.remove("hide");
- $("#hd").innerHTML="<b>⚙ Quản trị</b>"+Object.entries(TY).map(([k,v])=>`<button data-k="${k}" onclick="lst('${k}')">${v}</button>`).join("")+`<button data-k="contact" onclick="contactTab()">Liên hệ</button><button data-k="msg" onclick="msgs()">Tin nhắn</button><button class="g" data-k="seed" onclick="seedTab()">📥 Dữ liệu mẫu</button><button data-k="set" onclick="sets()">Cài đặt web</button><span style="flex:1"></span><a href="/" target="_blank" style="color:#fff">Xem web ↗</a> <button class="g" onclick="sessionStorage.clear();location.reload()">Thoát</button>`;lst("product")}
-function view(n,k){["list","edit","set","msg","contact","seed"].forEach(x=>$("#v_"+x).classList.toggle("hide",x!=n));document.querySelectorAll("#hd button[data-k]").forEach(b=>b.classList.toggle("on",b.dataset.k==k))}
+ $("#hd").innerHTML="<b>⚙ Quản trị</b>"+Object.entries(TY).map(([k,v])=>`<button data-k="${k}" onclick="lst('${k}')">${v}</button>`).join("")+`<button data-k="contact" onclick="contactTab()">Liên hệ</button><button data-k="msg" onclick="msgs()">Tin nhắn</button><button class="g" data-k="seed" onclick="seedTab()">📥 Dữ liệu mẫu</button><button data-k="bulk" onclick="bulkTab()">📦 Nhập hàng loạt</button><button data-k="set" onclick="sets()">Cài đặt web</button><button class="g" id="bk" onclick="backup()">💾 Tải bản sao lưu</button><span style="flex:1"></span><a href="/" target="_blank" style="color:#fff">Xem web ↗</a> <button class="g" onclick="sessionStorage.clear();location.reload()">Thoát</button>`;lst("product")}
+function view(n,k){["list","edit","set","msg","contact","seed","bulk"].forEach(x=>$("#v_"+x).classList.toggle("hide",x!=n));document.querySelectorAll("#hd button[data-k]").forEach(b=>b.classList.toggle("on",b.dataset.k==k))}
 async function lst(t){ty=t;view("list",t);const p=await api("/api/items?type="+t);let h;
  const row=x=>`<div class="row">${x.cover?`<img src="${x.cover}">`:""}<div><b>${esc(x.title||x.title_en)}</b><br><small>${t=="product"?"":esc(x.cat)} ${["news","application"].includes(t)?"· "+x.created:""}</small> ${x.published?"":'<span class="tag">Nháp</span>'}</div><button onclick="edit('${x.slug}')">Sửa</button><button class="r" onclick="del(${x.id})">Xóa</button></div>`;
  if(t=="product"){const gs=await api("/api/items?type=pgroup"),used=new Set();
@@ -130,6 +130,87 @@ async function runSeed(){const L=$("#sd_log"),log=m=>{L.textContent+=m+"\n";L.sc
     await api("/api/items",{method:"POST",body:JSON.stringify(o)});log(tag+"OK: "+(o.title||it.slug))}catch(er){log(tag+"LỖI: "+er.message)}}
   log("=== Xong! Mở trang web để xem. ===")}catch(er){log("LỖI: "+er.message)}
  $("#sd_go").disabled=false}
+/* ---- sao lưu ---- */
+async function backup(){const b=$("#bk"),t0=b.textContent;b.disabled=true;
+ try{b.textContent="Đang lấy dữ liệu…";const d=await api("/api/backup");d.images=[];let a=0;
+  for(;;){const r=await api("/api/backup?img=1&after="+a);if(!r.length)break;d.images.push(...r);a=r[r.length-1].id;b.textContent="Đang lấy ảnh… ("+d.images.length+")"}
+  d.app="kenflo";d.exported=new Date().toISOString();
+  const l=document.createElement("a");l.href=URL.createObjectURL(new Blob([JSON.stringify(d)],{type:"application/json"}));l.download="kenflo-sao-luu-"+d.exported.slice(0,10)+".json";document.body.appendChild(l);l.click();l.remove();
+  alert("Đã tải xong bản sao lưu: "+d.posts.length+" bài viết, "+d.images.length+" ảnh, "+d.messages.length+" tin nhắn.\nHãy cất file này ở nơi an toàn (Google Drive, USB…).")
+ }catch(e){alert("Lỗi sao lưu: "+e.message)}
+ b.disabled=false;b.textContent=t0}
+/* ---- nhập bài hàng loạt ---- */
+const BK={"loai":"type","type":"type","tieu de":"title","title":"title","tieu de en":"title_en","title en":"title_en","nhom":"cat","danh muc":"cat","group":"cat","category":"cat","cat":"cat","nhom en":"cat_en","danh muc en":"cat_en","category en":"cat_en","cat en":"cat_en","ngay":"date","date":"date","anh":"cover","anh dai dien":"cover","cover":"cover","mo ta":"excerpt","excerpt":"excerpt","mo ta en":"excerpt_en","excerpt en":"excerpt_en","thu tu":"sort","sort":"sort","nhap":"draft"};
+const BT={"tin tuc":"news","news":"news","san pham":"product","product":"product","ung dung":"application","application":"application","gioi thieu":"about","about":"about"};
+const nz=s=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").replace(/\s+/g," ").trim();
+const bx=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const inl=s=>bx(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,'<a href="$2">$1</a>');
+function mdHtml(t){t=(t||"").trim();if(!t)return"";if(/<(p|h2|h3|ul|img|div|table)\b/i.test(t))return t;
+ const out=[];let ul=[],pa=[];
+ const fp=()=>{if(pa.length){out.push("<p>"+inl(pa.join(" "))+"</p>");pa=[]}},fu=()=>{if(ul.length){out.push("<ul>"+ul.map(x=>"<li>"+inl(x)+"</li>").join("")+"</ul>");ul=[]}};
+ for(let l of t.split(/\r?\n/)){l=l.trim();let m;
+  if(!l){fp();fu();continue}
+  if(m=l.match(/^\[(?:ảnh|anh|img)\s*:\s*([^\]|]+?)\s*(?:\|\s*([^\]]*?))?\s*\]$/i)){fp();fu();out.push('<p><img src="@'+m[1]+'" alt="'+bx(m[2]||"").replace(/"/g,"&quot;")+'"></p>');continue}
+  if(m=l.match(/^###\s+(.+)$/)){fp();fu();out.push("<h3>"+inl(m[1])+"</h3>");continue}
+  if(m=l.match(/^#{1,2}\s+(.+)$/)){fp();fu();out.push("<h2>"+inl(m[1])+"</h2>");continue}
+  if(m=l.match(/^[-*•]\s+(.+)$/)){fp();ul.push(m[1]);continue}
+  fu();pa.push(l)}
+ fp();fu();return out.join("")}
+function parseBulk(t){const out=[];t=t.replace(/^\uFEFF/,"");
+ for(const part of t.split(/^[ \t]*={3,}.*$/m).slice(1)){
+  const ls=part.split(/\r?\n/);let i=ls.findIndex(x=>/^\s*-{3,}\s*$/.test(x));if(i<0)i=ls.length;
+  const o={};
+  for(const l of ls.slice(0,i)){const m=l.match(/^\s*([^:：]+?)\s*[:：]\s*(.*)$/);if(!m)continue;const k=BK[nz(m[1])];if(k)o[k]=m[2].trim()}
+  const sp=ls.slice(i+1).join("\n").split(/^[ \t]*-{3,}\s*(?:EN|ENGLISH)\s*-{3,}[ \t]*$/im);
+  o.body=sp[0]||"";o.body_en=sp[1]||"";o.draft=/^(co|yes|1|true|x)$/.test(nz(o.draft));
+  out.push(o)}
+ return out}
+const shW=(f,mx=1280)=>new Promise((r,j)=>{const i=new Image();i.onerror=()=>j(new Error("Không đọc được ảnh "+f.name));i.onload=()=>{let q=.85;const k=Math.min(1,mx/Math.max(i.width,1)),cv=document.createElement("canvas");cv.width=Math.round(i.width*k);cv.height=Math.round(i.height*k);const x=cv.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,cv.width,cv.height);x.drawImage(i,0,0,cv.width,cv.height);let d=cv.toDataURL("image/jpeg",q);while(d.length>1500000&&q>.4){q-=.15;d=cv.toDataURL("image/jpeg",q)}r(d)};i.src=URL.createObjectURL(f)});
+const BS=["=== BÀI ===","loại: tin tức","tiêu đề: Tiêu đề bài viết thứ nhất","nhóm: Tin ngành","ngày: 2026-10-25","ảnh: anh-bia-1.jpg","mô tả: Một hai câu mô tả ngắn hiện ở danh sách và trên Google.","---","Đoạn mở đầu của bài viết.","","## Tiêu đề phụ","Nội dung đoạn văn. Có thể dùng **chữ đậm** và [liên kết](https://kenflo-vn.com).","","- Ý thứ nhất","- Ý thứ hai","","[ảnh: anh-trong-bai.jpg | Mô tả ảnh (tốt cho SEO)]","","=== BÀI ===","loại: sản phẩm","nhóm: Bơm ly tâm","tiêu đề: Tên sản phẩm mẫu","ảnh: san-pham-1.jpg","mô tả: Mô tả ngắn của sản phẩm.","---","Giới thiệu sản phẩm…","","## Thông số chính","- Lưu lượng: …","- Cột áp: …","","=== BÀI ===","loại: ứng dụng","tiêu đề: Bơm cho ngành ví dụ","nhóm: Bơm ly tâm","ảnh: ung-dung-1.jpg","---","Nội dung bài ứng dụng…"].join("\n");
+function bulkSample(){const l=document.createElement("a");l.href=URL.createObjectURL(new Blob(["\uFEFF"+BS],{type:"text/plain"}));l.download="mau-nhap-bai.txt";document.body.appendChild(l);l.click();l.remove()}
+function bulkTab(){view("bulk","bulk");$("#v_bulk").innerHTML=`<div class="box"><h3>📦 Nhập bài hàng loạt</h3><div class="note"><b>Cách dùng:</b> (1) Soạn tất cả bài trong một file <b>.txt</b> theo mẫu (bấm “Tải file mẫu” để xem). (2) Chọn file đó ở ô 1. (3) Chọn tất cả ảnh đi kèm ở ô 2 (giữ Ctrl hoặc Shift để chọn nhiều ảnh). (4) Bấm Bắt đầu. Ảnh được tự thu nhỏ, bài được tự dịch sang English. Không đóng trang khi đang chạy.<br>Mỗi bài bắt đầu bằng dòng <b>=== BÀI ===</b>, tiếp theo là các dòng thông tin, dòng <b>---</b>, rồi nội dung. Tên ảnh trong file phải <b>trùng</b> tên file ảnh bạn chọn.</div>
+<p><button class="g" onclick="bulkSample()">⬇ Tải file mẫu</button></p>
+<label>1. File bài viết (.txt)</label><input type="file" id="bk_txt" accept=".txt,text/plain">
+<label>2. Các ảnh đi kèm (chọn nhiều ảnh cùng lúc)</label><input type="file" id="bk_img" accept="image/*" multiple>
+<label>Nếu đã có bài trùng tiêu đề</label><select id="bk_mode"><option value="skip">Bỏ qua (an toàn, khuyên dùng)</option><option value="update">Cập nhật bài cũ bằng nội dung trong file</option></select>
+<label><input type="checkbox" id="bk_draft" style="width:auto"> Lưu nháp (chưa hiện công khai, để kiểm tra trước)</label><br>
+<label><input type="checkbox" id="bk_tr" checked style="width:auto"> Tự dịch sang English (phần còn trống)</label>
+<p><button id="bk_go" onclick="runBulk()">▶ Bắt đầu nhập</button></p><pre id="bk_log" style="background:#111;color:#9f9;padding:12px;max-height:380px;overflow:auto;font-size:12px;white-space:pre-wrap"></pre></div>`}
+async function runBulk(){const L=$("#bk_log"),log=m=>{L.textContent+=m+"\n";L.scrollTop=1e9};L.textContent="";
+ const jf=$("#bk_txt").files[0];if(!jf)return alert("Hãy chọn file bài viết (.txt) ở ô 1.");
+ const items=parseBulk(await jf.text());if(!items.length)return alert("Không thấy bài nào trong file. Mỗi bài phải bắt đầu bằng dòng === BÀI ===");
+ const files={};Array.from($("#bk_img").files).forEach(f=>files[f.name.toLowerCase().trim()]=f);
+ const mode=$("#bk_mode").value,dr=$("#bk_draft").checked,tr=$("#bk_tr").checked,cache={},seen=new Set();let ok=0,bad=0;
+ $("#bk_go").disabled=true;log("Đọc được "+items.length+" bài, "+Object.keys(files).length+" ảnh.");
+ try{
+  const gs=await api("/api/items?type=pgroup"),ex=await api("/api/items"),by={};ex.forEach(x=>by[x.type+"|"+nz(x.title||x.title_en)]=x);
+  const U=async n=>{if(/^(https?:|\/|data:)/i.test(n))return n;const k=n.replace(/^@/,"").split(/[\\\/]/).pop().toLowerCase().trim();if(cache[k])return cache[k];const f=files[k];if(!f)throw new Error("thiếu file ảnh \""+k+"\" (chưa chọn ở ô 2)");const d=await shW(f),r=await fetch("/api/img",{method:"POST",headers:H(),body:d}),j=await r.json();if(!r.ok)throw new Error(j.error);return cache[k]=j.url};
+  const fix=async h=>{for(const m of [...h.matchAll(/src=(["'])((?!https?:|\/|data:)[^"']+)\1/gi)]){const u=await U(m[2]);h=h.split(m[0]).join('src="'+u+'"')}return h};
+  let n=0;
+  for(const it of items){n++;const tag="["+n+"/"+items.length+"] ",nm=it.title||it.title_en||"(không tên)";
+   try{
+    const type=BT[nz(it.type)]||(TY[it.type]?it.type:"news");
+    if(!it.title&&!it.title_en)throw new Error("thiếu dòng tiêu đề");
+    let cat=it.cat||"";
+    if(type=="product"){const g=gs.find(g=>g.slug==cat||nz(g.title)==nz(cat)||nz(g.title_en)==nz(cat));if(!g)throw new Error("không thấy nhóm sản phẩm \""+cat+"\". Các nhóm hiện có: "+gs.map(g=>g.title).join(" | "));cat=g.slug}
+    const key=type+"|"+nz(nm);if(seen.has(key)){log(tag+"bỏ qua (trùng tiêu đề trong cùng file): "+nm);continue}seen.add(key);
+    const e=by[key];if(e&&mode=="skip"){log(tag+"bỏ qua (web đã có bài này): "+nm);continue}
+    const o=e?await api("/api/items/"+e.slug):{type,title:"",title_en:"",cat:"",cat_en:"",excerpt:"",excerpt_en:"",body:"",body_en:"",cover:"",sort:0,created:new Date().toISOString().slice(0,10),published:dr||it.draft?0:1};
+    const pr=(k,v,ve)=>{if(v){o[k]=v;o[k+"_en"]=ve||""}else if(ve)o[k+"_en"]=ve};
+    pr("title",it.title,it.title_en);pr("excerpt",it.excerpt,it.excerpt_en);
+    if(type=="product"){if(cat){o.cat=cat;o.cat_en=""}}else pr("cat",cat,it.cat_en);
+    pr("body",mdHtml(it.body),mdHtml(it.body_en));o.body=await fix(o.body||"");o.body_en=await fix(o.body_en||"");
+    let cv=it.cover;if(!cv&&!o.cover){const m=(o.body||"").match(/<img[^>]+src="([^"]+)"/);if(m)cv=m[1]}
+    if(cv)o.cover=await U(cv);
+    if(it.date){let m=it.date.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);if(m)o.created=m[1]+"-"+m[2].padStart(2,"0")+"-"+m[3].padStart(2,"0");else if(m=it.date.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/))o.created=m[3]+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0")}
+    if(it.sort!==undefined&&it.sort!=="")o.sort=+it.sort||0;
+    if(e&&it.draft)o.published=0;
+    if(tr)await autoTr(o,[["title",0],["excerpt",0],...(type=="product"?[]:[["cat",0]]),["body",1]],"fill",true);
+    await api("/api/items",{method:"POST",body:JSON.stringify(o)});ok++;log(tag+(e?"ĐÃ CẬP NHẬT: ":"OK: ")+nm)
+   }catch(er){bad++;log(tag+"LỖI ("+nm+"): "+er.message)}}
+  log("=== Xong: "+ok+" bài thành công, "+bad+" lỗi. Mở tab tương ứng hoặc xem trang web để kiểm tra. ===")
+ }catch(er){log("LỖI: "+er.message)}
+ $("#bk_go").disabled=false}
 /* ---- tab Liên hệ ---- */
 let CR=[];
 async function contactTab(){view("contact","contact");const s=await fetch("/api/settings").then(r=>r.json());
