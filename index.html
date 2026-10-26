@@ -59,7 +59,7 @@ function fm(){const x=t();return `<form onsubmit="return sendF(this)"><input nam
 function sendF(f){fetch("/api/contact",{method:"POST",body:JSON.stringify(Object.fromEntries(new FormData(f)))}).then(()=>{alert(t().thanks);f.reset()});return false}
 const R={
 home(){const x=t(),ps=G("product").filter(p=>hc=="all"||pcat(p)==hc).slice(0,6),vd=S.video;
- return `${bn()}<div class="wrap" style="text-align:center;padding-top:34px"><h1 style="font-size:30px;color:#000;line-height:1.3">${esc(pk(S,"seo_title")||S.brand)}</h1><p style="max-width:860px;margin:10px auto 0;font-size:17px">${esc(pk(S,"seo_desc"))}</p></div>
+ return `${bn()}<h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">${esc(S.brand||"KENFLO")}</h1>
  <section class="sec"><div class="wrap"><h2><em>${x.ourP[0]}</em>${x.ourP[1]}</h2><div class="bar"></div>${tabs([["all",x.all],...cats("product").map(c=>[c.k,c.l])],hc,"setHc")}<div class="grid">${ps.map(card).join("")||x.none}</div></div></section>
  <section class="band"><div class="wrap"><p>${x.band[0]}<b>${x.band[1]}</b></p><a class="btn" href="#contact">${x.start}</a></div></section>
  <section class="sec"><div class="wrap two"><div><h2><em>${x.video}</em></h2><div class="bar"></div><p style="margin-bottom:24px;font-size:18px">${x.videoT}</p><a class="btn" href="#contact">${x.contact}</a></div>${vd?`<iframe src="${esc(vd)}" style="width:100%;aspect-ratio:16/9;border:0" allowfullscreen></iframe>`:`<div class="ph">▶ Video</div>`}</div></section>
