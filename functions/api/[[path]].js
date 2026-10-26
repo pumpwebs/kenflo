@@ -21,6 +21,10 @@ export async function onRequest({request,env,params}){
    const r=await db.prepare("SELECT data FROM images WHERE id=?1").bind(p.split("/")[1]).first();if(!r)return new Response("",{status:404});
    const [h,b]=r.data.split(",");
    return new Response(Uint8Array.from(atob(b),c=>c.charCodeAt(0)),{headers:{"content-type":h.slice(5,h.indexOf(";")),"cache-control":"public,max-age=31536000"}})}
+  if(p==="backup"){if(!auth)return need();
+   if(url.searchParams.get("img")){const {results}=await db.prepare("SELECT id,data FROM images WHERE id>?1 ORDER BY id LIMIT 6").bind(parseInt(url.searchParams.get("after"))||0).all();return J(results)}
+   const po=await db.prepare("SELECT * FROM posts ORDER BY id").all(),st=await db.prepare("SELECT k,v FROM settings").all(),ms=await db.prepare("SELECT * FROM messages ORDER BY id").all();
+   return J({posts:po.results,settings:st.results,messages:ms.results})}
   if(p==="translate"){if(!auth)return need();const b=await request.json();
    return J({texts:await Promise.all(b.texts.slice(0,20).map(t=>tx(env,t,b.from,b.to)))})}
   if(p==="contact"&&m==="POST"){const b=await request.json(),c=k=>String(b[k]||"").slice(0,2000);
